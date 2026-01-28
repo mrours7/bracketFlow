@@ -4,182 +4,470 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>BracketFlow — Organisateur de Tournois</title>
-  <meta name="description" content="BracketFlow : crée des poules, saisis les scores, lance un arbre à élimination directe." />
+  <meta name="description" content="BracketFlow : organise des poules, saisis les scores, lance un bracket. UI moderne (Bootstrap), dark mode, mode spectateur." />
+
+  <!-- Bootstrap 5.3 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
   <link rel="stylesheet" href="style.css" />
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
+
   <!-- NAVBAR -->
-  <header class="navbar">
-    <div class="container nav-inner">
-      <a class="brand" href="#" aria-label="BracketFlow - Accueil">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span class="brand-text">
-          <span class="brand-name">BracketFlow</span>
-          <span class="brand-tag">Poules • Scores • Élimination</span>
-        </span>
+  <nav class="navbar navbar-expand-lg sticky-top bf-navbar border-bottom">
+    <div class="container py-2">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+        <span class="bf-mark" aria-hidden="true"></span>
+        <div class="d-flex flex-column lh-sm">
+          <span class="fw-semibold">BracketFlow</span>
+          <small class="text-muted">Poules • Scores • Bracket</small>
+        </div>
       </a>
 
-      <nav class="nav-actions" aria-label="Actions rapides">
-        <span class="status" title="État du tournoi">
-          <span class="status-dot" id="statusDot"></span>
-          <span id="statusText">Prêt</span>
-        </span>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navActions" aria-controls="navActions" aria-expanded="false" aria-label="Ouvrir le menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-        <button class="btn btn-ghost" id="demoBtnTop" type="button">Démo</button>
-        <button class="btn btn-ghost" id="exportBtnTop" type="button">Exporter</button>
-        <button class="btn btn-primary" id="importBtnTop" type="button">Importer</button>
-      </nav>
+      <div class="collapse navbar-collapse justify-content-end" id="navActions">
+        <div class="d-flex flex-wrap gap-2 align-items-center mt-3 mt-lg-0">
+
+          <span class="badge rounded-pill bf-status px-3 py-2 d-inline-flex align-items-center gap-2">
+            <span class="bf-dot" id="statusDot" data-state="ready" aria-hidden="true"></span>
+            <span id="statusText">Prêt</span>
+          </span>
+
+          <div class="btn-group btn-group-sm" role="group" aria-label="Modes">
+            <button class="btn btn-outline-secondary" id="spectatorToggle" type="button" title="Mode spectateur (lecture seule)">
+              <i class="bi bi-eye me-1"></i> Spectateur
+            </button>
+            <button class="btn btn-outline-secondary" id="themeToggle" type="button" title="Thème clair/sombre">
+              <i class="bi bi-moon-stars me-1"></i> Thème
+            </button>
+          </div>
+
+          <button class="btn btn-outline-secondary btn-sm" id="demoBtnTop" type="button">
+            <i class="bi bi-lightning-charge me-1"></i> Démo
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" id="exportBtnTop" type="button">
+            <i class="bi bi-download me-1"></i> Exporter
+          </button>
+          <button class="btn btn-primary btn-sm" id="importBtnTop" type="button">
+            <i class="bi bi-upload me-1"></i> Importer
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="bf-hero">
+    <div class="container">
+      <div class="row align-items-center g-4">
+        <div class="col-12 col-lg-6">
+          <h1 class="display-6 fw-semibold mb-2">Organise un tournoi en quelques minutes.</h1>
+          <p class="text-muted mb-3">
+            Ajoute des participants, génère des poules, saisis les scores, puis lance un bracket à élimination directe.
+            <span class="d-inline-block mt-1">Mode <b>Spectateur</b> + <b>Thème sombre</b> inclus.</span>
+          </p>
+
+          <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary" id="ctaDemo" type="button">
+              <i class="bi bi-play-circle me-1"></i> Lancer une démo
+            </button>
+            <button class="btn btn-outline-secondary" id="ctaGoApp" type="button">
+              <i class="bi bi-grid me-1"></i> Accéder à l’app
+            </button>
+          </div>
+
+          <div class="bf-hero-metrics mt-4">
+            <div class="bf-metric">
+              <div class="bf-metric-n" id="metricParticipants">0</div>
+              <div class="bf-metric-l">Participants</div>
+            </div>
+            <div class="bf-metric">
+              <div class="bf-metric-n" id="metricGroups">—</div>
+              <div class="bf-metric-l">Poules</div>
+            </div>
+            <div class="bf-metric">
+              <div class="bf-metric-n" id="metricRounds">—</div>
+              <div class="bf-metric-l">Tours</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <div class="bf-hero-card shadow-sm">
+            <img
+              class="bf-hero-img"
+              alt="Illustration tournoi"
+              src="https://images.unsplash.com/photo-1521412644187-c49fa049e84d?auto=format&fit=crop&w=1400&q=80"
+            />
+            <div class="bf-hero-card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="fw-semibold">Dashboard moderne</div>
+                <span class="badge text-bg-light border">1 page</span>
+              </div>
+              <div class="text-muted small mt-1">
+                Onglets, états vides, toasts, transitions et responsive.
+              </div>
+            </div>
+          </div>
+          <div class="row g-3 mt-3">
+            <div class="col-6">
+              <div class="bf-mini-card">
+                <img alt="Supporters" src="https://images.unsplash.com/photo-1522778526097-ce0a22ceb253?auto=format&fit=crop&w=900&q=80">
+                <div class="bf-mini-body">
+                  <div class="fw-semibold small">Mode Spectateur</div>
+                  <div class="text-muted small">Lecture seule</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="bf-mini-card">
+                <img alt="Interface" src="https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=900&q=80">
+                <div class="bf-mini-body">
+                  <div class="fw-semibold small">Thème sombre</div>
+                  <div class="text-muted small">Persistant</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
   </header>
 
-  <!-- MAIN -->
-  <main class="container page">
-    <!-- Sidebar -->
-    <aside class="card">
-      <div class="card-hd">
-        <div>
-          <h2>Participants</h2>
-          <p class="sub">Ajoute, mélange, importe rapidement.</p>
-        </div>
-        <span class="pill" id="countPill">0</span>
-      </div>
-
-      <div class="card-bd">
-        <div class="row">
-          <input id="nameInput" class="input" placeholder="Nom du participant (ex: Alex)" />
-          <button class="btn btn-primary" id="addBtn" type="button">Ajouter</button>
-        </div>
-
-        <div class="row">
-          <button class="btn btn-ghost" id="shuffleBtn" type="button">Tirage aléatoire</button>
-          <button class="btn btn-danger" id="clearBtn" type="button">Tout effacer</button>
-        </div>
-
-        <div class="row">
-          <input id="bulkInput" class="input" placeholder="Import : noms séparés par virgule" />
-          <button class="btn btn-ghost" id="bulkBtn" type="button">Importer</button>
-        </div>
-
-        <div class="list" id="participantsList"></div>
-
-        <hr class="sep" />
-
-        <div class="section-title">
-          <h3>Créer des poules</h3>
-          <span class="hint">Round-robin</span>
-        </div>
-
-        <div class="row">
-          <label class="label">Nb poules</label>
-          <select id="groupsCount" class="select">
-            <option value="2">2</option><option value="3">3</option><option value="4">4</option>
-            <option value="5">5</option><option value="6">6</option><option value="8">8</option>
-          </select>
-
-          <label class="label">Qualifiés / poule</label>
-          <select id="qualifyPerGroup" class="select">
-            <option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option>
-          </select>
-        </div>
-
-        <div class="row">
-          <button class="btn btn-primary" id="makeGroupsBtn" type="button">Générer les poules</button>
-          <button class="btn btn-ghost" id="resetGroupsBtn" type="button">Réinitialiser</button>
-        </div>
-
-        <p class="small">
-          Classement : <b>3</b> pts victoire, <b>1</b> pt nul, <b>0</b> pt défaite.
-          Départage : points → diff. buts → buts marqués.
-        </p>
-
-        <hr class="sep" />
-
-        <div class="section-title">
-          <h3>Élimination directe</h3>
-          <span class="hint">Auto-bracket</span>
-        </div>
-
-        <div class="row">
-          <button class="btn btn-success" id="makeBracketBtn" type="button">Créer le bracket</button>
-          <button class="btn btn-ghost" id="resetBracketBtn" type="button">Réinitialiser</button>
-        </div>
-
-        <p class="small">
-          Bracket basé sur les qualifiés (1ers puis 2èmes, etc.).
-          BYE ajoutés si nécessaire pour atteindre une puissance de 2.
-        </p>
-
-        <input type="file" id="fileInput" accept="application/json" hidden />
-      </div>
-    </aside>
-
-    <!-- Content -->
-    <section class="card">
-      <div class="card-hd">
-        <div>
-          <h2>Tournoi</h2>
-          <p class="sub">Poules puis élimination directe.</p>
-        </div>
-        <span class="pill" id="statusPill">Prêt</span>
-      </div>
-
-      <div class="card-bd">
-        <div class="grid-2">
+  <!-- FEATURES (portfolio vibe) -->
+  <section class="container bf-features" id="topFeatures">
+    <div class="row g-3">
+      <div class="col-12 col-md-4">
+        <div class="bf-feature">
+          <i class="bi bi-bricks"></i>
           <div>
-            <div class="section-title">
-              <h3>Poules</h3>
-              <span class="hint" id="groupsMeta">—</span>
-            </div>
-            <div class="stack" id="groupsView"></div>
-          </div>
-
-          <div>
-            <div class="section-title">
-              <h3>Bracket</h3>
-              <span class="hint" id="bracketMeta">—</span>
-            </div>
-            <div class="bracket" id="bracketView"></div>
+            <div class="fw-semibold">Design system</div>
+            <div class="text-muted small">Variables CSS, états, composants cohérents.</div>
           </div>
         </div>
       </div>
-    </section>
+      <div class="col-12 col-md-4">
+        <div class="bf-feature">
+          <i class="bi bi-universal-access-circle"></i>
+          <div>
+            <div class="fw-semibold">UX & accessibilité</div>
+            <div class="text-muted small">Feedback, focus visible, navigation fluide.</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <div class="bf-feature">
+          <i class="bi bi-rocket-takeoff"></i>
+          <div>
+            <div class="fw-semibold">Interactions</div>
+            <div class="text-muted small">Toasts, modals, animations discrètes.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <main class="container my-4 flex-grow-1" id="app">
+    <!-- Tabs -->
+    <ul class="nav nav-pills bf-tabs mb-3" id="bfTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-setup" data-bs-toggle="pill" data-bs-target="#pane-setup" type="button" role="tab" aria-controls="pane-setup" aria-selected="true">
+          <i class="bi bi-gear me-1"></i> Configuration
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-groups" data-bs-toggle="pill" data-bs-target="#pane-groups" type="button" role="tab" aria-controls="pane-groups" aria-selected="false">
+          <i class="bi bi-people me-1"></i> Poules
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-bracket" data-bs-toggle="pill" data-bs-target="#pane-bracket" type="button" role="tab" aria-controls="pane-bracket" aria-selected="false">
+          <i class="bi bi-diagram-3 me-1"></i> Bracket
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content" id="bfTabsContent">
+
+      <!-- Setup -->
+      <section class="tab-pane fade show active" id="pane-setup" role="tabpanel" aria-labelledby="tab-setup">
+        <div class="row g-4 align-items-start">
+
+          <!-- Participants -->
+          <div class="col-12 col-lg-7">
+            <div class="card shadow-sm bf-card bf-hoverlift">
+              <div class="card-header bg-white d-flex align-items-start justify-content-between">
+                <div>
+                  <h2 class="h5 mb-1">Participants</h2>
+                  <p class="text-muted mb-0 small">Ajoute, mélange, importe rapidement.</p>
+                </div>
+                <span class="badge text-bg-light border bf-pill" id="countPill">0</span>
+              </div>
+
+              <div class="card-body">
+                <div class="row g-2 align-items-center">
+                  <div class="col-12 col-md-8">
+                    <label class="form-label small text-muted mb-1" for="nameInput">Nom</label>
+                    <input id="nameInput" class="form-control" placeholder="Nom du participant (ex: Alex)" />
+                    <div class="form-text" id="nameHelp">Appuie sur Entrée pour ajouter.</div>
+                  </div>
+                  <div class="col-12 col-md-4 d-grid mt-md-4">
+                    <button class="btn btn-primary" id="addBtn" type="button">
+                      <i class="bi bi-plus-lg me-1"></i> Ajouter
+                    </button>
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-2 flex-wrap">
+                  <button class="btn btn-outline-secondary" id="shuffleBtn" type="button">
+                    <i class="bi bi-shuffle me-1"></i> Tirage aléatoire
+                  </button>
+                  <button class="btn btn-outline-danger" id="clearBtn" type="button" data-bs-toggle="modal" data-bs-target="#clearModal">
+                    <i class="bi bi-trash3 me-1"></i> Tout effacer
+                  </button>
+                </div>
+
+                <div class="row g-2 align-items-center mt-3">
+                  <div class="col-12 col-md-8">
+                    <label class="form-label small text-muted mb-1" for="bulkInput">Import rapide</label>
+                    <input id="bulkInput" class="form-control" placeholder="Ex: Alex, Sam, Nina, Léo" />
+                  </div>
+                  <div class="col-12 col-md-4 d-grid mt-md-4">
+                    <button class="btn btn-outline-secondary" id="bulkBtn" type="button">
+                      <i class="bi bi-box-arrow-in-down me-1"></i> Importer
+                    </button>
+                  </div>
+                </div>
+
+                <div class="mt-3">
+                  <div class="list-group bf-list" id="participantsList"></div>
+                </div>
+
+                <input type="file" id="fileInput" accept="application/json" hidden />
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings -->
+          <div class="col-12 col-lg-5">
+            <div class="card shadow-sm bf-card bf-hoverlift mb-4">
+              <div class="card-header bg-white">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="bi bi-sliders2 text-primary"></i>
+                  <div>
+                    <div class="fw-semibold">Paramètres du tournoi</div>
+                    <div class="text-muted small">Configure poules et élimination.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-body">
+                <div class="bf-mini-illustration mb-3">
+                  <img
+                    alt="Illustration tableau"
+                    src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80"
+                  />
+                </div>
+
+                <div class="d-flex align-items-baseline justify-content-between mb-2">
+                  <h3 class="h6 mb-0">Créer des poules</h3>
+                  <span class="text-muted small">Round-robin</span>
+                </div>
+
+                <div class="row g-2">
+                  <div class="col-6">
+                    <label class="form-label small text-muted mb-1">Nb poules</label>
+                    <select id="groupsCount" class="form-select">
+                      <option value="2">2</option><option value="3">3</option><option value="4">4</option>
+                      <option value="5">5</option><option value="6">6</option><option value="8">8</option>
+                    </select>
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label small text-muted mb-1">Qualifiés / poule</label>
+                    <select id="qualifyPerGroup" class="form-select">
+                      <option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-2">
+                  <button class="btn btn-primary w-100" id="makeGroupsBtn" type="button">
+                    <i class="bi bi-magic me-1"></i> Générer les poules
+                  </button>
+                  <button class="btn btn-outline-secondary w-100" id="resetGroupsBtn" type="button">
+                    Réinitialiser
+                  </button>
+                </div>
+
+                <p class="text-muted small mt-2 mb-0">
+                  Classement : <b>3</b> pts victoire, <b>1</b> pt nul, <b>0</b> pt défaite.
+                  Départage : points → diff. buts → buts marqués.
+                </p>
+
+                <hr class="my-3">
+
+                <div class="d-flex align-items-baseline justify-content-between mb-2">
+                  <h3 class="h6 mb-0">Élimination directe</h3>
+                  <span class="text-muted small">Auto-bracket</span>
+                </div>
+
+                <div class="d-flex gap-2">
+                  <button class="btn btn-success w-100" id="makeBracketBtn" type="button">
+                    <i class="bi bi-diagram-3 me-1"></i> Créer le bracket
+                  </button>
+                  <button class="btn btn-outline-secondary w-100" id="resetBracketBtn" type="button">
+                    Réinitialiser
+                  </button>
+                </div>
+
+                <p class="text-muted small mt-2 mb-0">
+                  Bracket basé sur les qualifiés (1ers puis 2èmes, etc.). BYE ajoutés si nécessaire.
+                </p>
+
+                <div class="d-flex gap-2 mt-3 flex-wrap">
+                  <button class="btn btn-outline-secondary btn-sm" id="exportBtnInline" type="button">
+                    <i class="bi bi-download me-1"></i> Exporter JSON
+                  </button>
+                  <button class="btn btn-outline-secondary btn-sm" id="importBtnInline" type="button">
+                    <i class="bi bi-upload me-1"></i> Importer JSON
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert bf-alert mb-0" role="alert">
+              <div class="d-flex gap-2">
+                <i class="bi bi-info-circle"></i>
+                <div class="small">
+                  <b>Conseil :</b> ajoute tous les participants, clique <b>Tirage aléatoire</b>, puis génère les poules.
+                  Utilise ensuite l’onglet <b>Poules</b> pour saisir les scores.
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Groups -->
+      <section class="tab-pane fade" id="pane-groups" role="tabpanel" aria-labelledby="tab-groups">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+          <div>
+            <h2 class="h5 mb-1">Poules</h2>
+            <div class="text-muted small">Classement + matchs (round-robin).</div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small" id="groupsMeta">—</span>
+            <button class="btn btn-primary btn-sm" type="button" id="makeGroupsBtn2">
+              <i class="bi bi-magic me-1"></i> Générer
+            </button>
+          </div>
+        </div>
+
+        <div class="d-flex flex-column gap-3" id="groupsView"></div>
+      </section>
+
+      <!-- Bracket -->
+      <section class="tab-pane fade" id="pane-bracket" role="tabpanel" aria-labelledby="tab-bracket">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+          <div>
+            <h2 class="h5 mb-1">Bracket</h2>
+            <div class="text-muted small">Élimination directe avec progression automatique.</div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small" id="bracketMeta">—</span>
+            <button class="btn btn-success btn-sm" type="button" id="makeBracketBtn2">
+              <i class="bi bi-diagram-3 me-1"></i> Créer le bracket
+            </button>
+          </div>
+        </div>
+
+        <div class="bf-bracket" id="bracketView"></div>
+      </section>
+    </div>
   </main>
 
   <!-- FOOTER -->
-  <footer class="footer">
-    <div class="container footer-inner">
-      <div class="footer-left">
-        <div class="footer-brand">
-          <span class="brand-mark small" aria-hidden="true"></span>
-          <div>
-            <div class="footer-title">BracketFlow</div>
-            <div class="footer-sub">Organisateur de tournois (HTML • CSS • JS)</div>
+  <footer class="mt-auto bf-footer border-top">
+    <div class="container py-4">
+      <div class="row g-3 align-items-center">
+        <div class="col-12 col-md-7">
+          <div class="d-flex align-items-center gap-2">
+            <span class="bf-mark bf-mark-sm" aria-hidden="true"></span>
+            <div class="lh-sm">
+              <div class="fw-semibold">BracketFlow</div>
+              <div class="text-muted small">Projet portfolio front-end — UI/UX + Bootstrap + JS</div>
+            </div>
+          </div>
+          <div class="text-muted small mt-2">© <span id="year"></span> BracketFlow — Démo locale (export/import JSON).</div>
+        </div>
+
+        <div class="col-12 col-md-5 text-md-end">
+          <div class="d-flex gap-3 justify-content-md-end flex-wrap">
+            <a class="link-secondary link-underline-opacity-0 link-underline-opacity-75-hover" href="#" id="demoBtn">Charger une démo</a>
+            <a class="link-secondary link-underline-opacity-0 link-underline-opacity-75-hover" href="#" id="exportBtn">Exporter JSON</a>
+            <a class="link-secondary link-underline-opacity-0 link-underline-opacity-75-hover" href="#" id="importBtn">Importer JSON</a>
+          </div>
+          <div class="text-muted small mt-2">
+            <span class="bf-chip"><i class="bi bi-eye me-1"></i> Mode spectateur</span>
+            <span class="bf-chip ms-2"><i class="bi bi-moon-stars me-1"></i> Thème sombre</span>
           </div>
         </div>
-        <div class="footer-note">Astuce : mélange les participants avant de générer les poules.</div>
-      </div>
-
-      <div class="footer-right">
-        <div class="footer-links">
-          <a href="#" id="demoBtn">Charger une démo</a>
-          <a href="#" id="exportBtn">Exporter JSON</a>
-          <a href="#" id="importBtn">Importer JSON</a>
-        </div>
-        <div class="footer-copy">© <span id="year"></span> BracketFlow</div>
       </div>
     </div>
   </footer>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <!-- Confirm modal -->
+  <div class="modal fade" id="clearModal" tabindex="-1" aria-labelledby="clearModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bf-modal">
+        <div class="modal-header">
+          <h5 class="modal-title" id="clearModalLabel">Tout effacer ?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          Cette action supprime les participants, les poules et le bracket. Aucun retour en arrière.
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="button" class="btn btn-danger" id="confirmClearBtn">Effacer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Bootstrap -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="bfToast" class="toast align-items-center text-bg-dark border-0" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body" id="toastBody">…</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fermer"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 (() => {
   // ----------------- State -----------------
   const state = {
     participants: [],
-    groups: null,   // { groups: [{name, players:[], matches:[] }], qualifyPerGroup, createdAt }
-    bracket: null   // { rounds: [ [match,...], ...], createdAt }
+    groups: null,
+    bracket: null,
+    ui: {
+      spectator: false,
+      theme: "light" // or "dark"
+    }
   };
 
   // ----------------- Helpers -----------------
@@ -194,12 +482,13 @@
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
   }[m]));
 
-  function toast(msg){
-    const el = $("#toast");
-    el.textContent = msg;
-    el.classList.add("show");
-    clearTimeout(toast._t);
-    toast._t = setTimeout(()=> el.classList.remove("show"), 2600);
+  // Toast
+  const toastEl = $("#bfToast");
+  const toastBody = $("#toastBody");
+  const toast = new bootstrap.Toast(toastEl, { delay: 2600 });
+  function notify(msg){
+    toastBody.textContent = msg;
+    toast.show();
   }
 
   function shuffle(arr){
@@ -211,42 +500,86 @@
   }
 
   function setStatus(text){
-    $("#statusPill").textContent = text;
     $("#statusText").textContent = text;
     const dot = $("#statusDot");
     dot.dataset.state = (text === "Prêt") ? "ready" : (text === "Poules") ? "groups" : "bracket";
   }
 
-  function updateCount(){
+  function updateMetrics(){
     $("#countPill").textContent = state.participants.length;
+    $("#metricParticipants").textContent = state.participants.length;
+    $("#metricGroups").textContent = state.groups ? state.groups.groups.length : "—";
+    $("#metricRounds").textContent = state.bracket ? state.bracket.rounds.length : "—";
+  }
+
+  // ----------------- UI: theme & spectator -----------------
+  function applyTheme(){
+    document.documentElement.setAttribute("data-theme", state.ui.theme);
+    const icon = $("#themeToggle i");
+    if (state.ui.theme === "dark"){
+      icon.className = "bi bi-sun me-1";
+      $("#themeToggle").classList.add("active");
+    } else {
+      icon.className = "bi bi-moon-stars me-1";
+      $("#themeToggle").classList.remove("active");
+    }
+  }
+
+  function applySpectator(){
+    document.documentElement.classList.toggle("bf-spectator", state.ui.spectator);
+    $("#spectatorToggle").classList.toggle("active", state.ui.spectator);
+    $("#spectatorToggle i").className = state.ui.spectator ? "bi bi-eye-fill me-1" : "bi bi-eye me-1";
+  }
+
+  function saveUiPrefs(){
+    localStorage.setItem("bf_ui", JSON.stringify(state.ui));
+  }
+
+  function loadUiPrefs(){
+    try{
+      const raw = localStorage.getItem("bf_ui");
+      if (!raw) return;
+      const ui = JSON.parse(raw);
+      if (ui && (ui.theme === "light" || ui.theme === "dark")) state.ui.theme = ui.theme;
+      if (ui && typeof ui.spectator === "boolean") state.ui.spectator = ui.spectator;
+    } catch {}
   }
 
   // ----------------- Participants -----------------
   function renderParticipants(){
-    updateCount();
     const box = $("#participantsList");
     box.innerHTML = "";
 
     if (state.participants.length === 0){
-      const empty = document.createElement("div");
-      empty.className = "empty";
-      empty.textContent = "Aucun participant. Ajoute des noms ci-dessus.";
-      box.appendChild(empty);
+      box.innerHTML = `
+        <div class="bf-emptylist">
+          <div class="bf-empty-ic"><i class="bi bi-people"></i></div>
+          <div class="fw-semibold">Commence par ajouter des participants</div>
+          <div class="text-muted small">Ensuite : tirage aléatoire → générer les poules → saisir les scores.</div>
+          <div class="d-flex gap-2 mt-2 flex-wrap">
+            <button class="btn btn-primary btn-sm" id="emptyDemoBtn" type="button"><i class="bi bi-lightning-charge me-1"></i> Charger une démo</button>
+            <button class="btn btn-outline-secondary btn-sm" id="emptyFocusBtn" type="button"><i class="bi bi-cursor me-1"></i> Ajouter un nom</button>
+          </div>
+        </div>
+      `;
+      box.querySelector("#emptyDemoBtn").addEventListener("click", () => $("#demoBtn").click());
+      box.querySelector("#emptyFocusBtn").addEventListener("click", () => $("#nameInput").focus());
       return;
     }
 
     state.participants.forEach((p, idx) => {
       const el = document.createElement("div");
-      el.className = "item";
+      el.className = "list-group-item d-flex align-items-center justify-content-between gap-2";
       el.innerHTML = `
-        <div class="item-left">
-          <div class="item-name">${escapeHtml(p.name)}</div>
-          <div class="item-meta">#${idx+1}</div>
+        <div class="min-w-0">
+          <div class="fw-semibold text-truncate">${escapeHtml(p.name)}</div>
+          <div class="text-muted small">#${idx+1}</div>
         </div>
-        <div class="item-actions">
-          <button class="icon-btn" data-act="up" title="Monter" type="button">↑</button>
-          <button class="icon-btn" data-act="down" title="Descendre" type="button">↓</button>
-          <button class="btn btn-danger btn-sm" data-act="del" type="button">Suppr.</button>
+
+        <div class="d-flex align-items-center gap-2 flex-shrink-0 bf-editonly">
+          <button class="btn btn-outline-secondary btn-sm bf-icon-btn" data-act="up" title="Monter" type="button">↑</button>
+          <button class="btn btn-outline-secondary btn-sm bf-icon-btn" data-act="down" title="Descendre" type="button">↓</button>
+          <button class="btn btn-outline-danger btn-sm" data-act="del" type="button">Suppr.</button>
         </div>
       `;
 
@@ -260,7 +593,7 @@
           state.groups = null;
           state.bracket = null;
           renderAll();
-          toast("Participant supprimé. Poules/bracket réinitialisés.");
+          notify("Participant supprimé. Poules/bracket réinitialisés.");
         }
         if (act === "up" && idx > 0){
           [state.participants[idx-1], state.participants[idx]] = [state.participants[idx], state.participants[idx-1]];
@@ -278,14 +611,15 @@
 
   function addParticipant(name){
     const n = normalizeName(name);
-    if (!n) return toast("Nom vide.");
+    if (!n) return notify("Nom vide.");
     const exists = state.participants.some(p => p.name.toLowerCase() === n.toLowerCase());
-    if (exists) return toast("Ce nom existe déjà.");
+    if (exists) return notify("Ce nom existe déjà.");
     state.participants.push({ id: uid(), name: n });
     $("#nameInput").value = "";
     state.groups = null;
     state.bracket = null;
     renderAll();
+    pulse("#participantsList");
   }
 
   // ----------------- Groups -----------------
@@ -310,7 +644,8 @@
             aId: a, bId: b,
             aScore: null, bScore: null,
             done: false,
-            winnerId: null
+            winnerId: null,
+            updatedAt: null
           });
         }
       }
@@ -352,12 +687,16 @@
 
   function generateGroups(){
     const nPlayers = state.participants.length;
-    if (nPlayers < 2) return toast("Ajoute au moins 2 participants.");
+    if (nPlayers < 2) return notify("Ajoute au moins 2 participants.");
     const gCount = clampInt($("#groupsCount").value, 2);
     const qualify = clampInt($("#qualifyPerGroup").value, 2);
 
-    if (gCount > nPlayers) return toast("Plus de poules que de participants.");
-    if (qualify < 1) return toast("Qualifiés/poule invalide.");
+    if (gCount > nPlayers) return notify("Plus de poules que de participants.");
+    if (qualify < 1) return notify("Qualifiés/poule invalide.");
+
+    // little "loading" feel
+    document.documentElement.classList.add("bf-busy");
+    setTimeout(() => document.documentElement.classList.remove("bf-busy"), 350);
 
     const groups = Array.from({length: gCount}, (_,i) => ({
       name: `Poule ${String.fromCharCode(65+i)}`,
@@ -365,23 +704,21 @@
       matches: []
     }));
 
-    state.participants.forEach((p, i) => {
-      groups[i % gCount].players.push(p);
-    });
-
+    state.participants.forEach((p, i) => { groups[i % gCount].players.push(p); });
     groups.forEach(g => { g.matches = makeRoundRobinMatches(g.players); });
 
     state.groups = { groups, qualifyPerGroup: qualify, createdAt: Date.now() };
     state.bracket = null;
     renderAll();
-    toast("Poules générées.");
+    notify("Poules générées.");
+    pulse("#groupsView");
   }
 
   function resetGroups(){
     state.groups = null;
     state.bracket = null;
     renderAll();
-    toast("Poules réinitialisées.");
+    notify("Poules réinitialisées.");
   }
 
   // ----------------- Bracket -----------------
@@ -400,7 +737,8 @@
       bScore: null,
       done: false,
       winner: null,
-      badge: null
+      badge: null,
+      updatedAt: null
     };
   }
 
@@ -432,7 +770,7 @@
   }
 
   function buildBracketFromQualified(){
-    if (!state.groups) return toast("Génère d'abord les poules.");
+    if (!state.groups) return notify("Génère d'abord les poules.");
     const qualify = state.groups.qualifyPerGroup;
 
     const qualified = [];
@@ -450,7 +788,7 @@
       });
     });
 
-    if (qualified.length < 2) return toast("Pas assez de qualifiés pour un bracket.");
+    if (qualified.length < 2) return notify("Pas assez de qualifiés pour un bracket.");
 
     qualified.sort((a,b) => {
       if (a.seedPos !== b.seedPos) return a.seedPos - b.seedPos;
@@ -495,16 +833,17 @@
 
     state.bracket = { rounds, createdAt: Date.now() };
     renderAll();
-    toast("Bracket créé.");
+    notify("Bracket créé.");
+    pulse("#bracketView");
   }
 
   function resetBracket(){
     state.bracket = null;
     renderAll();
-    toast("Bracket réinitialisé.");
+    notify("Bracket réinitialisé.");
   }
 
-  // ----------------- Render -----------------
+  // ----------------- Render: Groups -----------------
   function findName(id){
     const p = state.participants.find(x => x.id === id);
     return p ? p.name : "Inconnu";
@@ -516,98 +855,123 @@
 
     if (!state.groups){
       $("#groupsMeta").textContent = "—";
-      const hint = document.createElement("div");
-      hint.className = "empty";
-      hint.textContent = "Génère des poules pour afficher les matchs et le classement.";
-      wrap.appendChild(hint);
+      wrap.innerHTML = `
+        <div class="bf-emptycard">
+          <div class="bf-empty-ic"><i class="bi bi-people"></i></div>
+          <div class="fw-semibold">Aucune poule pour le moment</div>
+          <div class="text-muted small">Va dans <b>Configuration</b> puis clique “Générer les poules”.</div>
+          <div class="mt-2">
+            <button class="btn btn-primary btn-sm" id="emptyMakeGroups" type="button"><i class="bi bi-magic me-1"></i> Générer</button>
+          </div>
+        </div>
+      `;
+      wrap.querySelector("#emptyMakeGroups").addEventListener("click", generateGroups);
       return;
     }
 
     $("#groupsMeta").textContent = `${state.groups.groups.length} poule(s) • ${state.groups.qualifyPerGroup} qualifié(s)/poule`;
 
     state.groups.groups.forEach((g, gi) => {
-      const groupEl = document.createElement("div");
-      groupEl.className = "panel";
-
       const table = computeTable(g);
-      groupEl.innerHTML = `
-        <div class="panel-hd">
-          <div class="panel-title">${escapeHtml(g.name)}</div>
-          <span class="pill">${g.players.length} joueurs</span>
+
+      const groupCard = document.createElement("div");
+      groupCard.className = "card bf-subcard shadow-sm bf-hoverlift";
+
+      groupCard.innerHTML = `
+        <div class="card-header bg-white d-flex align-items-center justify-content-between">
+          <div class="fw-semibold">${escapeHtml(g.name)}</div>
+          <span class="badge text-bg-light border">${g.players.length} joueurs</span>
         </div>
 
-        <div class="panel-bd">
-          <div class="panel-block">
-            <div class="panel-label">Classement</div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th><th>Joueur</th><th>MJ</th><th>V</th><th>N</th><th>D</th><th>BP</th><th>BC</th><th>Diff</th><th>Pts</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${table.map((r, idx) => {
-                    const q = idx < state.groups.qualifyPerGroup ? ` <span class="q">Q</span>` : "";
-                    return `
-                      <tr>
-                        <td>${idx+1}</td>
-                        <td>${escapeHtml(r.name)}${q}</td>
-                        <td>${r.pld}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td>
-                        <td>${r.gf}</td><td>${r.ga}</td><td>${r.gd}</td><td><b>${r.pts}</b></td>
-                      </tr>
-                    `;
-                  }).join("")}
-                </tbody>
-              </table>
-            </div>
+        <div class="card-body">
+          <div class="text-muted small mb-2">Classement</div>
+
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-3">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th><th>Joueur</th><th>MJ</th><th>V</th><th>N</th><th>D</th><th>BP</th><th>BC</th><th>Diff</th><th>Pts</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${table.map((r, idx) => {
+                  const q = idx < state.groups.qualifyPerGroup ? `<span class="bf-q ms-2">Q</span>` : "";
+                  return `
+                    <tr>
+                      <td>${idx+1}</td>
+                      <td class="fw-medium">${escapeHtml(r.name)}${q}</td>
+                      <td>${r.pld}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td>
+                      <td>${r.gf}</td><td>${r.ga}</td><td>${r.gd}</td><td class="fw-semibold">${r.pts}</td>
+                    </tr>
+                  `;
+                }).join("")}
+              </tbody>
+            </table>
           </div>
 
-          <div class="panel-block">
-            <div class="panel-label">Matchs</div>
-            <div class="matches" id="groupMatches-${gi}"></div>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="text-muted small mb-2">Matchs</div>
+            <div class="text-muted small">Clique “Valider”</div>
           </div>
+
+          <div class="d-flex flex-column gap-2" id="groupMatches-${gi}"></div>
         </div>
       `;
-      wrap.appendChild(groupEl);
 
-      const matchesBox = groupEl.querySelector(`#groupMatches-${gi}`);
+      wrap.appendChild(groupCard);
+
+      const matchesBox = groupCard.querySelector(`#groupMatches-${gi}`);
 
       g.matches.forEach((m) => {
         const aName = findName(m.aId);
         const bName = findName(m.bId);
-        const status = m.done ? `<span class="badge badge-done">Terminé</span>` : `<span class="badge badge-todo">À jouer</span>`;
+
+        const status = m.done
+          ? `<span class="badge bf-badge-success">Terminé</span>`
+          : `<span class="badge bf-badge-warn">À jouer</span>`;
+
         const winner = m.done ? (m.winnerId ? findName(m.winnerId) : null) : null;
+        const updatedClass = (m.updatedAt && Date.now() - m.updatedAt < 1200) ? "bf-flash" : "";
 
         const row = document.createElement("div");
-        row.className = "match";
+        row.className = `bf-match border rounded-3 p-2 bg-white ${updatedClass}`;
+
         row.innerHTML = `
-          <div class="team">
-            <div class="team-top">
-              ${status}
-              <div class="names">${escapeHtml(aName)} <span class="vs">vs</span> ${escapeHtml(bName)}</div>
+          <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
+            <div class="flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                ${status}
+                <div class="bf-names">${escapeHtml(aName)} <span class="text-muted">vs</span> ${escapeHtml(bName)}</div>
+              </div>
+              ${winner ? `<div class="bf-winner mt-1">Vainqueur : <span>${escapeHtml(winner)}</span></div>` : ``}
             </div>
-            ${winner ? `<div class="winner">Vainqueur : <span>${escapeHtml(winner)}</span></div>` : ``}
-          </div>
-          <div class="score">
-            <input class="score-in" type="number" min="0" step="1" placeholder="A" value="${m.aScore ?? ""}" data-k="aScore">
-            <input class="score-in" type="number" min="0" step="1" placeholder="B" value="${m.bScore ?? ""}" data-k="bScore">
-            <button class="btn ${m.done ? "btn-ghost" : "btn-success"} btn-sm" data-act="save" type="button">
-              ${m.done ? "Modifier" : "Valider"}
-            </button>
+
+            <div class="d-flex align-items-center gap-2 ms-auto bf-editonly">
+              <input class="form-control form-control-sm bf-score" type="number" min="0" step="1" placeholder="A" value="${m.aScore ?? ""}" data-k="aScore">
+              <input class="form-control form-control-sm bf-score" type="number" min="0" step="1" placeholder="B" value="${m.bScore ?? ""}" data-k="bScore">
+              <button class="btn ${m.done ? "btn-outline-secondary" : "btn-success"} btn-sm" data-act="save" type="button">
+                ${m.done ? "Modifier" : "Valider"}
+              </button>
+            </div>
+
+            <div class="bf-viewonly text-muted small">
+              ${m.done ? `Score : <b>${m.aScore}</b> - <b>${m.bScore}</b>` : `—`}
+            </div>
           </div>
         `;
 
         row.addEventListener("click", (e) => {
+          if (state.ui.spectator) return;
           const btn = e.target.closest("button");
           if (!btn) return;
+
           const aIn = row.querySelector('input[data-k="aScore"]');
           const bIn = row.querySelector('input[data-k="bScore"]');
           const as = clampInt(aIn.value, NaN);
           const bs = clampInt(bIn.value, NaN);
 
           if (!Number.isFinite(as) || !Number.isFinite(bs) || as < 0 || bs < 0){
-            return toast("Scores invalides.");
+            return notify("Scores invalides.");
           }
 
           m.aScore = as;
@@ -616,10 +980,11 @@
           if (as > bs) m.winnerId = m.aId;
           else if (bs > as) m.winnerId = m.bId;
           else m.winnerId = null;
+          m.updatedAt = Date.now();
 
           state.bracket = null;
           renderAll();
-          toast("Match enregistré. Classement mis à jour.");
+          notify("Match enregistré. Classement mis à jour.");
         });
 
         matchesBox.appendChild(row);
@@ -627,21 +992,33 @@
     });
   }
 
+  // ----------------- Render: Bracket -----------------
   function renderBracket(){
     const wrap = $("#bracketView");
     wrap.innerHTML = "";
 
     if (!state.bracket){
       $("#bracketMeta").textContent = "—";
-      const hint = document.createElement("div");
-      hint.className = "empty";
-      hint.textContent = "Crée le bracket pour la phase à élimination directe.";
-      wrap.appendChild(hint);
+      wrap.innerHTML = `
+        <div class="bf-emptycard">
+          <div class="bf-empty-ic"><i class="bi bi-diagram-3"></i></div>
+          <div class="fw-semibold">Aucun bracket pour le moment</div>
+          <div class="text-muted small">Crée les poules, termine les matchs, puis clique “Créer le bracket”.</div>
+          <div class="mt-2">
+            <button class="btn btn-success btn-sm" id="emptyMakeBracket" type="button"><i class="bi bi-diagram-3 me-1"></i> Créer le bracket</button>
+          </div>
+        </div>
+      `;
+      wrap.querySelector("#emptyMakeBracket").addEventListener("click", buildBracketFromQualified);
       return;
     }
 
     const rounds = state.bracket.rounds;
     $("#bracketMeta").textContent = `${rounds.length} tour(s)`;
+
+    const scroller = document.createElement("div");
+    scroller.className = "bf-bracket-scroll";
+    wrap.appendChild(scroller);
 
     rounds.forEach((round, rIndex) => {
       const label =
@@ -650,18 +1027,17 @@
         (rIndex === rounds.length - 3) ? "Quarts" :
         `Tour ${rIndex+1}`;
 
-      const roundEl = document.createElement("div");
-      roundEl.className = "round";
-      roundEl.innerHTML = `
-        <div class="round-hd">
-          <div class="round-title">${label}</div>
-          <span class="pill">${round.length} match(s)</span>
+      const col = document.createElement("div");
+      col.className = "card bf-round shadow-sm bf-hoverlift";
+      col.innerHTML = `
+        <div class="card-header bg-white d-flex align-items-center justify-content-between">
+          <div class="fw-semibold">${label}</div>
+          <span class="badge text-bg-light border">${round.length} match(s)</span>
         </div>
-        <div class="round-bd" id="round-${rIndex}"></div>
+        <div class="card-body d-flex flex-column gap-2"></div>
       `;
-      wrap.appendChild(roundEl);
 
-      const box = roundEl.querySelector(`#round-${rIndex}`);
+      const box = col.querySelector(".card-body");
 
       round.forEach((m, mIndex) => {
         const a = m.a ? m.a.name : "—";
@@ -669,29 +1045,40 @@
         const canPlay = (m.a && m.a.id !== null && !m.a.isBye) && (m.b && m.b.id !== null && !m.b.isBye);
 
         let statusTxt = m.done ? "Terminé" : (canPlay ? "À jouer" : "En attente");
-        let badgeClass = m.done ? "badge-done" : (canPlay ? "badge-todo" : "badge-wait");
-        if (m.badge === "BYE") { statusTxt = "BYE"; badgeClass = "badge-done"; }
+        let badgeCls = m.done ? "bf-badge-success" : (canPlay ? "bf-badge-warn" : "bf-badge-wait");
+        if (m.badge === "BYE") { statusTxt = "BYE"; badgeCls = "bf-badge-success"; }
+
+        const updatedClass = (m.updatedAt && Date.now() - m.updatedAt < 1200) ? "bf-flash" : "";
 
         const el = document.createElement("div");
-        el.className = "match";
+        el.className = `bf-match border rounded-3 p-2 bg-white ${updatedClass}`;
+
         el.innerHTML = `
-          <div class="team">
-            <div class="team-top">
-              <span class="badge ${badgeClass}">${statusTxt}</span>
-              <div class="names">${escapeHtml(a)} <span class="vs">vs</span> ${escapeHtml(b)}</div>
+          <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
+            <div class="flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="badge ${badgeCls}">${statusTxt}</span>
+                <div class="bf-names">${escapeHtml(a)} <span class="text-muted">vs</span> ${escapeHtml(b)}</div>
+              </div>
+              ${m.winner ? `<div class="bf-winner mt-1">Vainqueur : <span>${escapeHtml(m.winner.name)}</span></div>` : ``}
             </div>
-            ${m.winner ? `<div class="winner">Vainqueur : <span>${escapeHtml(m.winner.name)}</span></div>` : ``}
-          </div>
-          <div class="score">
-            <input class="score-in" type="number" min="0" step="1" placeholder="A" value="${m.aScore ?? ""}" data-k="aScore" ${!canPlay ? "disabled" : ""}>
-            <input class="score-in" type="number" min="0" step="1" placeholder="B" value="${m.bScore ?? ""}" data-k="bScore" ${!canPlay ? "disabled" : ""}>
-            <button class="btn ${m.done ? "btn-ghost" : "btn-success"} btn-sm" data-act="save" type="button" ${!canPlay ? "disabled" : ""}>
-              ${m.done ? "Modifier" : "Valider"}
-            </button>
+
+            <div class="d-flex align-items-center gap-2 ms-auto bf-editonly">
+              <input class="form-control form-control-sm bf-score" type="number" min="0" step="1" placeholder="A" value="${m.aScore ?? ""}" data-k="aScore" ${(!canPlay || state.ui.spectator) ? "disabled" : ""}>
+              <input class="form-control form-control-sm bf-score" type="number" min="0" step="1" placeholder="B" value="${m.bScore ?? ""}" data-k="bScore" ${(!canPlay || state.ui.spectator) ? "disabled" : ""}>
+              <button class="btn ${m.done ? "btn-outline-secondary" : "btn-success"} btn-sm" data-act="save" type="button" ${(!canPlay || state.ui.spectator) ? "disabled" : ""}>
+                ${m.done ? "Modifier" : "Valider"}
+              </button>
+            </div>
+
+            <div class="bf-viewonly text-muted small">
+              ${m.done ? `Score : <b>${m.aScore}</b> - <b>${m.bScore}</b>` : `—`}
+            </div>
           </div>
         `;
 
         el.addEventListener("click", (e) => {
+          if (state.ui.spectator) return;
           const btn = e.target.closest("button");
           if (!btn) return;
 
@@ -701,10 +1088,10 @@
           const bs = clampInt(bIn.value, NaN);
 
           if (!Number.isFinite(as) || !Number.isFinite(bs) || as < 0 || bs < 0){
-            return toast("Scores invalides.");
+            return notify("Scores invalides.");
           }
           if (as === bs){
-            return toast("Élimination directe : pas de match nul.");
+            return notify("Élimination directe : pas de match nul.");
           }
 
           m.aScore = as;
@@ -712,20 +1099,34 @@
           m.done = true;
           m.winner = (as > bs) ? m.a : m.b;
           m.badge = null;
+          m.updatedAt = Date.now();
 
           placeWinner(rounds, rIndex, mIndex, m.winner);
           renderAll();
-          toast(rIndex === rounds.length - 1 ? "Finale terminée !" : "Vainqueur envoyé au tour suivant.");
+          notify(rIndex === rounds.length - 1 ? "Finale terminée !" : "Vainqueur envoyé au tour suivant.");
         });
 
         box.appendChild(el);
       });
+
+      scroller.appendChild(col);
     });
+  }
+
+  // ----------------- Pulse / polish -----------------
+  function pulse(selector){
+    const el = $(selector);
+    if (!el) return;
+    el.classList.remove("bf-pulse");
+    // reflow
+    void el.offsetWidth;
+    el.classList.add("bf-pulse");
+    setTimeout(()=> el.classList.remove("bf-pulse"), 650);
   }
 
   // ----------------- Export / Import -----------------
   function exportJson(){
-    const data = JSON.stringify(state, null, 2);
+    const data = JSON.stringify({ participants: state.participants, groups: state.groups, bracket: state.bracket }, null, 2);
     const blob = new Blob([data], {type:"application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -733,7 +1134,7 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
-    toast("Export JSON téléchargé.");
+    notify("Export JSON téléchargé.");
   }
 
   function importJsonFile(file){
@@ -746,9 +1147,9 @@
         state.groups = obj.groups ?? null;
         state.bracket = obj.bracket ?? null;
         renderAll();
-        toast("Import JSON OK.");
+        notify("Import JSON OK.");
       } catch {
-        toast("Import impossible (JSON invalide).");
+        notify("Import impossible (JSON invalide).");
       }
     };
     r.readAsText(file);
@@ -763,35 +1164,27 @@
     if (!state.groups && !state.bracket) setStatus("Prêt");
     else if (state.groups && !state.bracket) setStatus("Poules");
     else setStatus("Élimination");
+
+    updateMetrics();
   }
 
   // ----------------- Wire up -----------------
   $("#addBtn").addEventListener("click", () => addParticipant($("#nameInput").value));
-  $("#nameInput").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") addParticipant($("#nameInput").value);
-  });
+  $("#nameInput").addEventListener("keydown", (e) => { if (e.key === "Enter") addParticipant($("#nameInput").value); });
 
   $("#shuffleBtn").addEventListener("click", () => {
-    if (state.participants.length < 2) return toast("Pas assez de participants.");
+    if (state.participants.length < 2) return notify("Pas assez de participants.");
     shuffle(state.participants);
     state.groups = null;
     state.bracket = null;
     renderAll();
-    toast("Ordre mélangé.");
-  });
-
-  $("#clearBtn").addEventListener("click", () => {
-    state.participants = [];
-    state.groups = null;
-    state.bracket = null;
-    renderAll();
-    toast("Tout effacé.");
+    notify("Ordre mélangé.");
   });
 
   $("#bulkBtn").addEventListener("click", () => {
     const raw = $("#bulkInput").value || "";
     const parts = raw.split(",").map(normalizeName).filter(Boolean);
-    if (parts.length === 0) return toast("Rien à importer.");
+    if (parts.length === 0) return notify("Rien à importer.");
     let added = 0;
     parts.forEach(n => {
       if (!state.participants.some(p => p.name.toLowerCase() === n.toLowerCase())){
@@ -803,13 +1196,31 @@
     state.groups = null;
     state.bracket = null;
     renderAll();
-    toast(`${added} participant(s) importé(s).`);
+    notify(`${added} participant(s) importé(s).`);
+    pulse("#participantsList");
   });
 
+  // Generate / reset
   $("#makeGroupsBtn").addEventListener("click", generateGroups);
   $("#resetGroupsBtn").addEventListener("click", resetGroups);
   $("#makeBracketBtn").addEventListener("click", buildBracketFromQualified);
   $("#resetBracketBtn").addEventListener("click", resetBracket);
+
+  // Secondary buttons
+  $("#makeGroupsBtn2").addEventListener("click", generateGroups);
+  $("#makeBracketBtn2").addEventListener("click", buildBracketFromQualified);
+
+  // Export/Import buttons
+  $("#exportBtnTop").addEventListener("click", exportJson);
+  $("#importBtnTop").addEventListener("click", () => $("#fileInput").click());
+  $("#exportBtnInline").addEventListener("click", exportJson);
+  $("#importBtnInline").addEventListener("click", () => $("#fileInput").click());
+
+  $("#fileInput").addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    if (file) importJsonFile(file);
+    e.target.value = "";
+  });
 
   // Footer links
   $("#demoBtn").addEventListener("click", (e) => {
@@ -819,23 +1230,53 @@
     state.groups = null;
     state.bracket = null;
     renderAll();
-    toast("Démo chargée.");
+    notify("Démo chargée.");
+    pulse("#participantsList");
   });
   $("#exportBtn").addEventListener("click", (e) => { e.preventDefault(); exportJson(); });
   $("#importBtn").addEventListener("click", (e) => { e.preventDefault(); $("#fileInput").click(); });
 
-  // Topbar quick actions
-  $("#demoBtnTop").addEventListener("click", () => $("#demoBtn").click());
-  $("#exportBtnTop").addEventListener("click", exportJson);
-  $("#importBtnTop").addEventListener("click", () => $("#fileInput").click());
+  // CTA
+  $("#ctaDemo").addEventListener("click", () => $("#demoBtn").click());
+  $("#ctaGoApp").addEventListener("click", () => {
+    const top = $("#app").getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top, behavior: "smooth" });
+  });
 
-  $("#fileInput").addEventListener("change", (e) => {
-    const file = e.target.files?.[0];
-    if (file) importJsonFile(file);
-    e.target.value = "";
+  // Top demo
+  $("#demoBtnTop").addEventListener("click", () => $("#demoBtn").click());
+
+  // Modal confirm clear
+  $("#confirmClearBtn").addEventListener("click", () => {
+    state.participants = [];
+    state.groups = null;
+    state.bracket = null;
+    renderAll();
+    notify("Tout effacé.");
+    const modal = bootstrap.Modal.getInstance($("#clearModal"));
+    modal.hide();
+  });
+
+  // Theme toggle
+  $("#themeToggle").addEventListener("click", () => {
+    state.ui.theme = (state.ui.theme === "light") ? "dark" : "light";
+    applyTheme();
+    saveUiPrefs();
+    notify(state.ui.theme === "dark" ? "Thème sombre activé." : "Thème clair activé.");
+  });
+
+  // Spectator toggle
+  $("#spectatorToggle").addEventListener("click", () => {
+    state.ui.spectator = !state.ui.spectator;
+    applySpectator();
+    saveUiPrefs();
+    notify(state.ui.spectator ? "Mode spectateur : lecture seule." : "Mode édition : saisie activée.");
   });
 
   // Init
+  loadUiPrefs();
+  applyTheme();
+  applySpectator();
   $("#year").textContent = new Date().getFullYear();
   setStatus("Prêt");
   renderAll();
